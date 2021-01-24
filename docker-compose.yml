@@ -1,0 +1,16 @@
+version: '3.3'
+
+services:
+
+  console:
+    image: node:15-buster
+    networks:
+      - p2p-network
+    command: ["/bin/bash"]
+    volumes:
+      - ./app:/app
+    working_dir: /app
+
+
+networks:
+  p2p-network:

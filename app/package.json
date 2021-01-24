@@ -1,0 +1,17 @@
+{
+  "name": "p2papp",
+  "version": "1.0.0",
+  "description": "p2p demo app",
+  "main": "build/app.js",
+  "scripts": {
+    "start": "tsc && node build/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tslint": "^5.12.1",
+    "typescript": "^3.3.3"
+  }
+}
