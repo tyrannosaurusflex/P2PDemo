@@ -11,7 +11,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "tslint": "^5.12.1",
-    "typescript": "^3.3.3"
+    "@typescript-eslint/eslint-plugin": "^4.14.1",
+    "@typescript-eslint/parser": "^4.14.1",
+    "eslint": "^7.18.0",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "nact": "^7.6.0"
   }
 }

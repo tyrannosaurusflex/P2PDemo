@@ -5,7 +5,7 @@ Each morning at The P2P Investments Company, a batch job puts all the investorsâ
 
   
 
-Another batch job puts the daily interest rate of each account into another log file of:
+Another batch job `puts the daily interest` rate of each account into another log file of:
 
 `'account id','daily % rate'`
 
