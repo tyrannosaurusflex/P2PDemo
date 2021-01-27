@@ -1,4 +1,6 @@
-import { spawnStateless } from 'nact';
+import { spawnStateless, dispatch } from 'nact';
+import { Message as HoldingEntry, actr as InvestorSvc } from './investors';
+
 import csv from 'csvtojson';
 
 export class Message {
@@ -8,17 +10,12 @@ export class Message {
     public fileLocation: string;
 };
 
-type HoldingEntry = {
-    investorId: number;
-    accountId: string;
-    balance: number;
-};
 
 export const actr = (parent: any) => {
 
     return spawnStateless(
         parent,
-        async (msg: Message) => {
+        async (msg: Message, ctx: any) => {
             try {
 
                 const headerConfig = {
@@ -32,9 +29,6 @@ export const actr = (parent: any) => {
                     checkType: true
                 };
 
-                // with larger files problably best to subscribe to it async
-                // https://github.com/Keyang/node-csvtojson#asynchronously-process-each-line-from-csv-url
-
                 const holdings = await csv(headerConfig).fromFile(msg.fileLocation);
 
                 holdings.forEach(element => {
@@ -46,7 +40,20 @@ export const actr = (parent: any) => {
                         balance: element.balance,
                     };
 
-                    console.log(entry);
+                    let investorIdentifier = `investor-${entry.investorId}`;
+
+                    let investorService;
+
+                    if (ctx.children.has(investorIdentifier)) {
+                        investorService = ctx.children.get(investorIdentifier);
+
+                    } else {
+                        console.log("----------");
+                        investorService = InvestorSvc(ctx.self, investorIdentifier);
+                    }
+
+                    dispatch(investorService, entry);
+                    console.log(ctx);
                 });
 
             }

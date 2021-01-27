@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.actr = exports.Message = void 0;
 const nact_1 = require("nact");
+const investors_1 = require("./investors");
 const csvtojson_1 = __importDefault(require("csvtojson"));
 class Message {
     constructor(fileLocation) {
@@ -23,7 +24,7 @@ class Message {
 exports.Message = Message;
 ;
 const actr = (parent) => {
-    return nact_1.spawnStateless(parent, (msg) => __awaiter(void 0, void 0, void 0, function* () {
+    return nact_1.spawnStateless(parent, (msg, ctx) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const headerConfig = {
                 noheader: true,
@@ -35,8 +36,6 @@ const actr = (parent) => {
                 },
                 checkType: true
             };
-            // with larger files problably best to subscribe to it async
-            // https://github.com/Keyang/node-csvtojson#asynchronously-process-each-line-from-csv-url
             const holdings = yield csvtojson_1.default(headerConfig).fromFile(msg.fileLocation);
             holdings.forEach(element => {
                 // probably better to use a library to convert / intialise into type if types are more complex
@@ -45,7 +44,17 @@ const actr = (parent) => {
                     accountId: element.accountId,
                     balance: element.balance,
                 };
-                console.log(entry);
+                let investorIdentifier = `investor-${entry.investorId}`;
+                let investorService;
+                if (ctx.children.has(investorIdentifier)) {
+                    investorService = ctx.children.get(investorIdentifier);
+                }
+                else {
+                    console.log("----------");
+                    investorService = investors_1.actr(ctx.self, investorIdentifier);
+                }
+                nact_1.dispatch(investorService, entry);
+                console.log(ctx);
             });
         }
         catch (err) {
