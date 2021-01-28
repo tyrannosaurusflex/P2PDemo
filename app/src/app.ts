@@ -1,9 +1,16 @@
 import { start, dispatch } from 'nact';
+import { actr as InvestorSvc } from './services/investors';
 
-import { Message as HoldingsMessage, actr as HoldingsSvc } from './services/holdings';
 
 const system = start();
-const holdingsService = HoldingsSvc(system);
-const msg = new HoldingsMessage("./resources/holdings.csv");
+const investorSvc = InvestorSvc(system);
 
-dispatch(holdingsService, msg);
+dispatch(investorSvc, 1);
+dispatch(investorSvc, 2);
+dispatch(investorSvc, 3);
+dispatch(investorSvc, 4);
+dispatch(investorSvc, 5);
+dispatch(investorSvc, 6);
+dispatch(investorSvc, 7);
+
+// from api / messages / somewhere else
