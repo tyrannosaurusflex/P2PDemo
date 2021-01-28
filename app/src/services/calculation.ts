@@ -6,23 +6,46 @@ import { State as InvestorAccount } from "./investors";
 
 const promotion: number = 0.01;
 
+type AccountBalance =
+    {
+        investorId: number,
+        accountId: string,
+        previousBalance: number
+        currentBalance: number
+    };
+
+const calculatePromo = (investorAccount: InvestorAccount) => {
+
+    const highestHolding = Math.max(...investorAccount.holdings.map(a => a.balance));
+
+    const currentHolding = investorAccount.holdings.map(h => {
+
+        const isHighestHolding = h.balance == highestHolding;
+
+        const accountRate = investorAccount.rates.get(h.accountId);
+        const rateToApply = isHighestHolding ? accountRate + promotion : accountRate;
+
+        const currentValue = h.balance + h.balance * rateToApply;
+
+        let balance: AccountBalance =
+        {
+            investorId: investorAccount.investorId,
+            accountId: `${h.accountId} (${accountRate}%${isHighestHolding ? ` + ${promotion}` : ''})`,
+            previousBalance: h.balance,
+            currentBalance: currentValue
+        };
+
+        return balance;
+    });
+
+    return currentHolding;
+};
+
 export const actr = (parent: any, investorId: string) =>
     spawnStateless(
         parent,
         (investorAccount: InvestorAccount, ctx: any) => {
-
-            investorAccount.holdings.map(h => {
-
-                const highestHolding = Math.max(...investorAccount.holdings.map(a => a.balance));
-
-                const accountRate = investorAccount.rates.get(h.accountId);
-                const rateToApply = accountRate == highestHolding ? accountRate + promotion : accountRate;
-
-                const currentValue = h.balance + h.balance * rateToApply;
-
-                console.table([{ investorAccount: investorAccount.investorId, account: h.accountId, balance: currentValue }]);
-            });
-
+            console.table(calculatePromo(investorAccount));
         },
         investorId
     );
