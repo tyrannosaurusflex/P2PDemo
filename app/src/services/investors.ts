@@ -1,4 +1,4 @@
-import { spawn, dispatch } from 'nact';
+import { spawn, dispatch, query } from 'nact';
 
 import { actr as HoldingsSvc, Message as HoldingsMsg } from './holdings';
 
@@ -20,7 +20,11 @@ export const actr = (parent: any) =>
                 } else {
                     holdingsService = HoldingsSvc(ctx.self, userIdMessage);
                 }
-                dispatch(holdingsService, userIdMessage);
+
+                // dispatch(holdingsService, userIdMessage);
+
+                const result = await query(holdingsService, (sender) => Object.assign(msg, {sender}), 250); // Set a 250ms timeout
+                console.log(result);
 
             }
             catch (err) {
