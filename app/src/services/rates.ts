@@ -1,4 +1,4 @@
-import { spawn } from 'nact';
+import { spawn, dispatch } from 'nact';
 import csv from 'csvtojson';
 
 type State = {
@@ -35,7 +35,8 @@ export const actr = (parent: any, accountId: string) =>
                         state.hasParsed = true;
                     }
                 });
-                // console.log({ rate: state.rate, id: message.accountId });
+                dispatch(message.sender, { rate: state.rate, sender: ctx.self });
+
             }
             catch (err) {
                 // typically log to a log provider here, instead of the console

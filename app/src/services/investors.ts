@@ -1,18 +1,27 @@
-import { spawn, dispatch, query } from 'nact';
+import { spawn, query } from 'nact';
+import { actr as RatesSvc, Message as RateMsg } from './rates';
+import { actr as HoldingsSvc, Message as HoldingsMsg, AccountHolding } from './holdings';
+//  "AccountHolding" is being imported from holdings, ideally should be a separate context
+// i.e. this should have it's own types, just doing this for simplicity
 
-import { actr as HoldingsSvc, Message as HoldingsMsg } from './holdings';
+type State = {
+    investorId: number,
+    holdings: Array<AccountHolding>,
+    rates: Map<string, number>
+};
 
 export const actr = (parent: any) =>
     spawn(
         parent,
-        async (state: any, msg: number, ctx: any) => {
+        async (state: State = { investorId: null, holdings: [], rates: new Map<string, number>() }, msg: number, ctx: any) => {
             try {
 
                 let holdingsService;
 
                 let userIdMessage: HoldingsMsg = {
                     location: "./resources/holdings.csv",
-                    investorId: msg
+                    investorId: msg,
+                    sender: ctx.self
                 }
 
                 if (ctx.children.has(msg.toString())) {
@@ -21,10 +30,30 @@ export const actr = (parent: any) =>
                     holdingsService = HoldingsSvc(ctx.self, userIdMessage);
                 }
 
-                // dispatch(holdingsService, userIdMessage);
+                // get the users end of day holdings
+                const investorAccount = await query(holdingsService, (sender) => Object.assign(userIdMessage, { sender }), 250);
+                state.holdings = investorAccount.holdings;
 
-                const result = await query(holdingsService, (sender) => Object.assign(msg, {sender}), 250); // Set a 250ms timeout
-                console.log(result);
+                state.holdings.forEach(async holding => {
+
+                    let rateService;
+
+                    let accountIdMessage: RateMsg = {
+                        location: "./resources/rates.csv",
+                        accountId: holding.accountId
+                    }
+
+                    if (ctx.children.has(holding.accountId)) {
+                        rateService = ctx.children.get(holding.accountId);
+                    } else {
+                        rateService = RatesSvc(ctx.self, holding.accountId);
+                    }
+
+                    const rates = await query(rateService, (sender) => Object.assign(accountIdMessage, { sender }), 250);
+                    state.rates.set(holding.accountId, rates.rate);
+                });
+
+                state.investorId = msg;
 
             }
             catch (err) {

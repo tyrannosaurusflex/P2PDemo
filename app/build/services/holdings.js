@@ -12,19 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.actr = exports.Message = void 0;
+exports.actr = void 0;
 const nact_1 = require("nact");
-const investors_1 = require("./investors");
 const csvtojson_1 = __importDefault(require("csvtojson"));
-class Message {
-    constructor(fileLocation) {
-        this.fileLocation = fileLocation;
-    }
-}
-exports.Message = Message;
-;
-const actr = (parent) => {
-    return nact_1.spawnStateless(parent, (msg, ctx) => __awaiter(void 0, void 0, void 0, function* () {
+const actr = (parent, message) => nact_1.spawn(parent, (state = { holdings: [], hasParsed: false }, message, ctx) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!state.hasParsed) {
         try {
             const headerConfig = {
                 noheader: true,
@@ -36,33 +28,26 @@ const actr = (parent) => {
                 },
                 checkType: true
             };
-            const holdings = yield csvtojson_1.default(headerConfig).fromFile(msg.fileLocation);
+            const holdings = yield csvtojson_1.default(headerConfig).fromFile(message.location);
             holdings.forEach(element => {
-                // probably better to use a library to convert / intialise into type if types are more complex
-                let entry = {
-                    investorId: element.investorId,
-                    accountId: element.accountId,
-                    balance: element.balance,
-                };
-                let investorIdentifier = `investor-${entry.investorId}`;
-                let investorService;
-                if (ctx.children.has(investorIdentifier)) {
-                    investorService = ctx.children.get(investorIdentifier);
+                let inv = element.investorId;
+                if (inv == message.investorId) {
+                    let accountHolding = {
+                        accountId: element.accountId,
+                        balance: element.balance
+                    };
+                    state.holdings.push(accountHolding);
                 }
-                else {
-                    console.log("----------");
-                    investorService = investors_1.actr(ctx.self, investorIdentifier);
-                }
-                nact_1.dispatch(investorService, entry);
-                console.log(ctx);
             });
+            state.hasParsed = true;
+            nact_1.dispatch(message.sender, { holdings: state.holdings, sender: ctx.self });
         }
         catch (err) {
             // typically log to a log provider here, instead of the console
             console.error(err);
             throw err;
         }
-    }), 'holdings');
-};
+    }
+}), message.investorId.toString());
 exports.actr = actr;
 //# sourceMappingURL=holdings.js.map

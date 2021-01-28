@@ -1,8 +1,7 @@
 import { spawn, dispatch } from 'nact';
 import csv from 'csvtojson';
-import { actr as RatesSvc, Message as RateMsg } from './rates';
 
-type AccountHolding = {
+export type AccountHolding = {
     accountId: string;
     balance: number;
 };
@@ -14,7 +13,8 @@ type State = {
 
 export type Message = {
     investorId: number,
-    location: string
+    location: string,
+    sender: any
 };
 
 export const actr = (parent: any, message: Message) =>
@@ -51,31 +51,13 @@ export const actr = (parent: any, message: Message) =>
                     });
 
                     state.hasParsed = true;
-                    // console.log({ holdings: state.holdings, id: message.investorId });
+                    dispatch(message.sender, { holdings: state.holdings, sender: ctx.self });
                 }
                 catch (err) {
                     // typically log to a log provider here, instead of the console
                     console.error(err);
                     throw err;
                 }
-
-                state.holdings.forEach(holding => {
-
-                    let rateService;
-
-                    let accountIdMessage: RateMsg = {
-                        location: "./resources/rates.csv",
-                        accountId: holding.accountId
-                    }
-
-                    if (ctx.children.has(holding.accountId)) {
-                        rateService = ctx.children.get(holding.accountId);
-                    } else {
-                        rateService = RatesSvc(ctx.self, holding.accountId);
-                    }
-                    dispatch(rateService, accountIdMessage);
-
-                });
             }
 
 
