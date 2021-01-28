@@ -1,10 +1,9 @@
-import { spawnStateless } from 'nact';
-import { State as InvestorAccount } from "./investors";
+import { spawnStateless, dispatch, message } from 'nact';
+import { State as InvestorAccount } from './investors';
 
 //  "InvestorAccount" is being imported from investors, ideally should be a separate context
 // i.e. this should have it's own types, just doing this for simplicity
 
-const promotion: number = 0.01;
 
 type AccountBalance =
     {
@@ -13,6 +12,14 @@ type AccountBalance =
         previousBalance: number
         currentBalance: number
     };
+
+export type Message =
+    {
+        sender: any,
+        investorAccount: InvestorAccount
+    };
+
+const promotion: number = 0.01;
 
 const calculatePromo = (investorAccount: InvestorAccount) => {
 
@@ -44,8 +51,11 @@ const calculatePromo = (investorAccount: InvestorAccount) => {
 export const actr = (parent: any, investorId: string) =>
     spawnStateless(
         parent,
-        (investorAccount: InvestorAccount, ctx: any) => {
-            console.table(calculatePromo(investorAccount));
+        (message: Message, ctx: any) => {
+
+            const balances = calculatePromo(message.investorAccount);
+
+            dispatch(message.sender, { balances, sender: ctx.self });
         },
         investorId
     );

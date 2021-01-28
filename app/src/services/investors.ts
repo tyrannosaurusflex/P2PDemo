@@ -1,7 +1,7 @@
 import { spawn, query, dispatch } from 'nact';
 import { actr as RatesSvc, Message as RateMsg } from './rates';
 import { actr as HoldingsSvc, Message as HoldingsMsg, AccountHolding } from './holdings';
-import { actr as PromoCalculationSvc } from "./calculation";
+import { actr as PromoCalculationSvc, Message as CalcMsg } from './calculation';
 
 //  "AccountHolding" is being imported from holdings, ideally should be a separate context
 // i.e. this should have it's own types, just doing this for simplicity
@@ -15,7 +15,7 @@ export type State = {
 // holding service per investor
 const getHoldingService = (userIdMessage: HoldingsMsg, invId: number, ctx: any) => {
     let holdingsService;
-    let investorId = `holding-${invId}`;
+    let investorId = `investor-${invId}`;
     if (ctx.children.has(investorId)) {
         holdingsService = ctx.children.get(investorId);
     } else {
@@ -39,11 +39,11 @@ const getRatesService = (holding: AccountHolding, ctx: any) => {
 // promotion calculation service per account
 const getCalcService = (invId: number, ctx: any) => {
     let calcService;
-    let accountId = `calculation-${invId}`;
-    if (ctx.children.has(accountId)) {
-        calcService = ctx.children.get(accountId);
+    let investorId = `calculation-${invId}`;
+    if (ctx.children.has(investorId)) {
+        calcService = ctx.children.get(investorId);
     } else {
-        calcService = PromoCalculationSvc(ctx.self, accountId);
+        calcService = PromoCalculationSvc(ctx.self, investorId);
     }
     return calcService;
 };
@@ -84,7 +84,14 @@ export const actr = (parent: any) =>
 
                 let calcService = getCalcService(invId, ctx);
 
-                dispatch(calcService, state);
+                let msg: CalcMsg = {
+                    sender: ctx.self,
+                    investorAccount: state
+                };
+
+                const accounts = await query(calcService, (sender) => Object.assign(msg, { sender }), 250);
+                
+                console.table(accounts.balances);
 
             }
             catch (err) {
