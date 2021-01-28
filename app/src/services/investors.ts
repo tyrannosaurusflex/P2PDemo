@@ -34,7 +34,7 @@ export const actr = (parent: any) =>
                 const investorAccount = await query(holdingsService, (sender) => Object.assign(userIdMessage, { sender }), 250);
                 state.holdings = investorAccount.holdings;
 
-                state.holdings.forEach(async holding => {
+                await Promise.all(state.holdings.map(async holding => {
 
                     let rateService;
 
@@ -51,9 +51,11 @@ export const actr = (parent: any) =>
 
                     const rates = await query(rateService, (sender) => Object.assign(accountIdMessage, { sender }), 250);
                     state.rates.set(holding.accountId, rates.rate);
-                });
+                }));
 
                 state.investorId = msg;
+
+                console.log(state);
 
             }
             catch (err) {

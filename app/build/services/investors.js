@@ -30,7 +30,7 @@ const actr = (parent) => nact_1.spawn(parent, (state = { investorId: null, holdi
         // get the users end of day holdings
         const investorAccount = yield nact_1.query(holdingsService, (sender) => Object.assign(userIdMessage, { sender }), 250);
         state.holdings = investorAccount.holdings;
-        state.holdings.forEach((holding) => __awaiter(void 0, void 0, void 0, function* () {
+        yield Promise.all(state.holdings.map((holding) => __awaiter(void 0, void 0, void 0, function* () {
             let rateService;
             let accountIdMessage = {
                 location: "./resources/rates.csv",
@@ -44,8 +44,9 @@ const actr = (parent) => nact_1.spawn(parent, (state = { investorId: null, holdi
             }
             const rates = yield nact_1.query(rateService, (sender) => Object.assign(accountIdMessage, { sender }), 250);
             state.rates.set(holding.accountId, rates.rate);
-        }));
+        })));
         state.investorId = msg;
+        console.log(state);
     }
     catch (err) {
         // typically log to a log provider here, instead of the console
