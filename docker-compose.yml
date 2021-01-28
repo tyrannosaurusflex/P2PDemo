@@ -2,16 +2,7 @@ version: '3.3'
 
 services:
 
-  console:
-    image: node:15-buster
-    networks:
-      - p2p-network
-    command: ["/bin/bash"]
-    volumes:
-      - ./app:/app
-    working_dir: /app
-
-  build:
+  compile:
     image: node:15-buster
     networks:
       - p2p-network
@@ -19,7 +10,40 @@ services:
     command:
     - |
       npm install
-      npm build
+      npm run build
+    volumes:
+      - ./app:/app
+    working_dir: /app
+
+  run-app:
+    image: node:15-buster
+    networks:
+      - p2p-network
+    entrypoint: ["/bin/sh","-c"]
+    command:
+    - |
+      npm run run-app
+    volumes:
+      - ./app:/app
+    working_dir: /app
+
+  test:
+    image: node:15-buster
+    networks:
+      - p2p-network
+    entrypoint: ["/bin/sh","-c"]
+    command:
+    - |
+      npm run test
+    volumes:
+      - ./app:/app
+    working_dir: /app
+
+  console:
+    image: node:15-buster
+    networks:
+      - p2p-network
+    command: ["/bin/bash"]
     volumes:
       - ./app:/app
     working_dir: /app

@@ -2,10 +2,12 @@
   "name": "p2papp",
   "version": "1.0.0",
   "description": "p2p demo app",
-  "main": "build/app.js",
+  "main": "build/src/app.js",
   "scripts": {
-    "start": "tsc && node build/app.js",
-    "test": "jest"
+    "start": "tsc && node build/src/app.js",
+    "test": "jest",
+    "build": "tsc",
+    "run-app": "node build/src/app.js"
   },
   "keywords": [],
   "author": "",
