@@ -17,7 +17,7 @@ export type Message = {
     sender: any
 };
 
-export const actr = (parent: any, message: Message) =>
+export const actr = (parent: any, message: Message, investorId: string) =>
     spawn(
         parent,
         async (state: State = { holdings: [], hasParsed: false }, message, ctx: any) => {
@@ -64,5 +64,5 @@ export const actr = (parent: any, message: Message) =>
 
 
         },
-        message.investorId.toString()
+        investorId
     );

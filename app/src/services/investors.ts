@@ -1,10 +1,12 @@
-import { spawn, query } from 'nact';
+import { spawn, query, dispatch } from 'nact';
 import { actr as RatesSvc, Message as RateMsg } from './rates';
 import { actr as HoldingsSvc, Message as HoldingsMsg, AccountHolding } from './holdings';
+import { actr as CalculationSvc } from "./calculation";
+
 //  "AccountHolding" is being imported from holdings, ideally should be a separate context
 // i.e. this should have it's own types, just doing this for simplicity
 
-type State = {
+export type State = {
     investorId: number,
     holdings: Array<AccountHolding>,
     rates: Map<string, number>
@@ -13,49 +15,59 @@ type State = {
 export const actr = (parent: any) =>
     spawn(
         parent,
-        async (state: State = { investorId: null, holdings: [], rates: new Map<string, number>() }, msg: number, ctx: any) => {
+        async (state: State = { investorId: null, holdings: [], rates: new Map<string, number>() }, invId: number, ctx: any) => {
             try {
 
-                let holdingsService;
 
                 let userIdMessage: HoldingsMsg = {
                     location: "./resources/holdings.csv",
-                    investorId: msg,
+                    investorId: invId,
                     sender: ctx.self
                 }
 
-                if (ctx.children.has(msg.toString())) {
-                    holdingsService = ctx.children.get(msg.toString());
+                let holdingsService;
+                let investorId = `holding-${invId}`;
+                if (ctx.children.has(investorId)) {
+                    holdingsService = ctx.children.get(investorId);
                 } else {
-                    holdingsService = HoldingsSvc(ctx.self, userIdMessage);
+                    holdingsService = HoldingsSvc(ctx.self, userIdMessage, investorId);
                 }
 
-                // get the users end of day holdings
+                // get the users' end of day holdings
                 const investorAccount = await query(holdingsService, (sender) => Object.assign(userIdMessage, { sender }), 250);
                 state.holdings = investorAccount.holdings;
 
                 await Promise.all(state.holdings.map(async holding => {
-
-                    let rateService;
 
                     let accountIdMessage: RateMsg = {
                         location: "./resources/rates.csv",
                         accountId: holding.accountId
                     }
 
-                    if (ctx.children.has(holding.accountId)) {
-                        rateService = ctx.children.get(holding.accountId);
+                    let rateService;
+                    let accountId = `account-${holding.accountId}`;
+                    if (ctx.children.has(accountId)) {
+                        rateService = ctx.children.get(accountId);
                     } else {
-                        rateService = RatesSvc(ctx.self, holding.accountId);
+                        rateService = RatesSvc(ctx.self, accountId);
                     }
 
+                    // get rates associated with this holding
                     const rates = await query(rateService, (sender) => Object.assign(accountIdMessage, { sender }), 250);
                     state.rates.set(holding.accountId, rates.rate);
                 }));
 
-                state.investorId = msg;
+                state.investorId = invId;
 
-                console.log(state);
+                let calcService;
+                let accountId = `calculation-${invId}`;
+                if (ctx.children.has(accountId)) {
+                    calcService = ctx.children.get(accountId);
+                } else {
+                    calcService = CalculationSvc(ctx.self, accountId);
+                }
+
+                dispatch(calcService, state);
 
             }
             catch (err) {

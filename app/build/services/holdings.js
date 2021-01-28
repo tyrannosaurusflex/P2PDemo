@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.actr = void 0;
 const nact_1 = require("nact");
 const csvtojson_1 = __importDefault(require("csvtojson"));
-const actr = (parent, message) => nact_1.spawn(parent, (state = { holdings: [], hasParsed: false }, message, ctx) => __awaiter(void 0, void 0, void 0, function* () {
+const actr = (parent, message, investorId) => nact_1.spawn(parent, (state = { holdings: [], hasParsed: false }, message, ctx) => __awaiter(void 0, void 0, void 0, function* () {
     if (!state.hasParsed) {
         try {
             const headerConfig = {
@@ -48,6 +48,6 @@ const actr = (parent, message) => nact_1.spawn(parent, (state = { holdings: [], 
             throw err;
         }
     }
-}), message.investorId.toString());
+}), investorId);
 exports.actr = actr;
 //# sourceMappingURL=holdings.js.map
